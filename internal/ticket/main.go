@@ -1,7 +1,8 @@
 package main
 
-import "fmt"
+import "github.com/talk2sohail/train-ticket-api/internal/ticket/server"
 
 func main() {
-	fmt.Println("Started ticket service")
+	grpcServer := server.NewTicketGRPCServer(":9001")
+	grpcServer.Run()
 }

@@ -9,6 +9,7 @@ package proto
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -30,6 +31,7 @@ type Receipt struct {
 	User          *User                  `protobuf:"bytes,4,opt,name=user,proto3" json:"user,omitempty"`                                        // Reference to the User message
 	PricePaid     float64                `protobuf:"fixed64,5,opt,name=price_paid,json=pricePaid,proto3" json:"price_paid,omitempty"`           // Price in USD, e.g., 20.00
 	AllocatedSeat *Seat                  `protobuf:"bytes,6,opt,name=allocated_seat,json=allocatedSeat,proto3" json:"allocated_seat,omitempty"` // Reference to the Seat message
+	PurchaseDate  *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=purchase_date,json=purchaseDate,proto3" json:"purchase_date,omitempty"`    // Timestamp when the ticket was purchased
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -106,13 +108,20 @@ func (x *Receipt) GetAllocatedSeat() *Seat {
 	return nil
 }
 
+func (x *Receipt) GetPurchaseDate() *timestamppb.Timestamp {
+	if x != nil {
+		return x.PurchaseDate
+	}
+	return nil
+}
+
 var File_receipt_proto protoreflect.FileDescriptor
 
 const file_receipt_proto_rawDesc = "" +
 	"\n" +
 	"\rreceipt.proto\x12\x17trainticketing.entities\x1a\n" +
 	"user.proto\x1a\n" +
-	"seat.proto\"\x84\x02\n" +
+	"seat.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc5\x02\n" +
 	"\aReceipt\x12\x1b\n" +
 	"\tticket_id\x18\x01 \x01(\tR\bticketId\x12#\n" +
 	"\rfrom_location\x18\x02 \x01(\tR\ffromLocation\x12\x1f\n" +
@@ -121,7 +130,8 @@ const file_receipt_proto_rawDesc = "" +
 	"\x04user\x18\x04 \x01(\v2\x1d.trainticketing.entities.UserR\x04user\x12\x1d\n" +
 	"\n" +
 	"price_paid\x18\x05 \x01(\x01R\tpricePaid\x12D\n" +
-	"\x0eallocated_seat\x18\x06 \x01(\v2\x1d.trainticketing.entities.SeatR\rallocatedSeatB/Z-github.com/talk2sohail/train-ticket-api/protob\x06proto3"
+	"\x0eallocated_seat\x18\x06 \x01(\v2\x1d.trainticketing.entities.SeatR\rallocatedSeat\x12?\n" +
+	"\rpurchase_date\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\fpurchaseDateB/Z-github.com/talk2sohail/train-ticket-api/protob\x06proto3"
 
 var (
 	file_receipt_proto_rawDescOnce sync.Once
@@ -137,18 +147,20 @@ func file_receipt_proto_rawDescGZIP() []byte {
 
 var file_receipt_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_receipt_proto_goTypes = []any{
-	(*Receipt)(nil), // 0: trainticketing.entities.Receipt
-	(*User)(nil),    // 1: trainticketing.entities.User
-	(*Seat)(nil),    // 2: trainticketing.entities.Seat
+	(*Receipt)(nil),               // 0: trainticketing.entities.Receipt
+	(*User)(nil),                  // 1: trainticketing.entities.User
+	(*Seat)(nil),                  // 2: trainticketing.entities.Seat
+	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
 }
 var file_receipt_proto_depIdxs = []int32{
 	1, // 0: trainticketing.entities.Receipt.user:type_name -> trainticketing.entities.User
 	2, // 1: trainticketing.entities.Receipt.allocated_seat:type_name -> trainticketing.entities.Seat
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	3, // 2: trainticketing.entities.Receipt.purchase_date:type_name -> google.protobuf.Timestamp
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_receipt_proto_init() }

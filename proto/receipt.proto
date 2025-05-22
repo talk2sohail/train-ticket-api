@@ -7,6 +7,7 @@ option go_package = "github.com/talk2sohail/train-ticket-api/proto";
 
 import "user.proto";
 import "seat.proto";
+import "google/protobuf/timestamp.proto";
 
 // Represents a train ticket receipt.
 message Receipt {
@@ -16,4 +17,5 @@ message Receipt {
   trainticketing.entities.User user = 4; // Reference to the User message
   double price_paid = 5; // Price in USD, e.g., 20.00
   trainticketing.entities.Seat allocated_seat = 6; // Reference to the Seat message
+  google.protobuf.Timestamp purchase_date = 7; // Timestamp when the ticket was purchased
 }
