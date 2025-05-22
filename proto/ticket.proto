@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package trainticketing.service;
+
+option go_package = "github.com/talk2sohail/train-ticket-api/proto";
+
+
+import "user.proto";
+import "seat.proto";
+import "receipt.proto";
+
+
+
+// Service definition for the Train Ticketing System
+service TrainTicketingService {
+  // Submits a purchase for a train ticket.
+  rpc PurchaseTicket(PurchaseTicketRequest) returns (PurchaseTicketResponse);
+
+  // Retrieves the details of a specific receipt for a user.
+  rpc GetReceiptDetails(GetReceiptDetailsRequest) returns (GetReceiptDetailsResponse);
+
+  // Views all users and their allocated seats for a given train section.
+  rpc GetUsersBySection(GetUsersBySectionRequest) returns (GetUsersBySectionResponse);
+
+  // Removes a user and their ticket from the train.
+  rpc RemoveUser(RemoveUserRequest) returns (RemoveUserResponse);
+
+  // Modifies the seat allocation for an existing user.
+  rpc ModifyUserSeat(ModifyUserSeatRequest) returns (ModifyUserSeatResponse);
+}
+
+// Request message for purchasing a ticket.
+message PurchaseTicketRequest {
+  string from_location = 1; // e.g., "London"
+  string to_location = 2;   // e.g., "France"
+  trainticketing.entities.User user = 3; // Reference to the User message
+  double price_paid = 4; // Price in USD, e.g., 20.00
+}
+
+// Response message for purchasing a ticket.
+message PurchaseTicketResponse {
+  bool success = 1; // Indicates if the purchase was successful
+  string message = 2; // A descriptive message (e.g., error details)
+  trainticketing.entities.Receipt receipt = 3; // The generated receipt if successful
+}
+
+// Request message for getting receipt details.
+message GetReceiptDetailsRequest {
+  oneof identifier {
+    string email = 1;     // User's email
+    string ticket_id = 2; // Specific ticket ID
+  }
+}
+
+// Response message for getting receipt details.
+message GetReceiptDetailsResponse {
+  bool success = 1;
+  string message = 2;
+  trainticketing.entities.Receipt receipt = 3; // The requested receipt
+}
+
+// Represents a user and their allocated seat.
+message UserSeat {
+  trainticketing.entities.User user = 1; // Reference to the User message
+  trainticketing.entities.Seat seat = 2; // Reference to the Seat message
+}
+
+// Request message for getting users by section.
+message GetUsersBySectionRequest {
+  trainticketing.entities.Seat.Section section = 1; // The section to query (A or B)
+}
+
+// Response message for getting users by section.
+message GetUsersBySectionResponse {
+  bool success = 1;
+  string message = 2;
+  repeated UserSeat users_in_section = 3; // List of users and their seats
+}
+
+// Request message for removing a user.
+message RemoveUserRequest {
+  oneof identifier {
+    string email = 1;     // User's email
+    string ticket_id = 2; // Specific ticket ID
+  }
+}
+
+// Response message for removing a user.
+message RemoveUserResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request message for modifying a user's seat.
+message ModifyUserSeatRequest {
+  oneof identifier {
+    string email = 1;     // User's email
+    string ticket_id = 2; // Specific ticket ID
+  }
+  trainticketing.entities.Seat new_seat = 3; // The new seat to allocate
+}
+
+// Response message for modifying a user's seat.
+message ModifyUserSeatResponse {
+  bool success = 1;
+  string message = 2;
+  trainticketing.entities.Seat updated_seat = 3; // The newly allocated seat if successful
+}
