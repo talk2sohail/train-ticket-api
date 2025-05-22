@@ -281,6 +281,47 @@ func TestUnit_GetReceiptDetails(t *testing.T) {
 			t.Errorf("expected error %q, got %q", expected, err.Error())
 		}
 	})
+
+	t.Run("Concurrent retrieval of a receipt", func(t *testing.T) {
+		// Setup: Insert a receipt into the service.
+		ticketID := "concurrent-ticket"
+		expectedReceipt := &ticket.Receipt{
+			TicketId:     ticketID,
+			FromLocation: "CityX",
+			ToLocation:   "CityY",
+			PricePaid:    75.0,
+			// ...other necessary fields...
+		}
+		s.receipts[ticketID] = expectedReceipt
+
+		// Launch multiple goroutines concurrently calling GetReceiptDetails.
+		numGoroutines := 20
+		var wg sync.WaitGroup
+		errChan := make(chan error, numGoroutines)
+
+		for i := 0; i < numGoroutines; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				receipt, err := s.GetReceiptDetails(ctx, ticketID)
+				if err != nil {
+					errChan <- err
+					return
+				}
+				if receipt.TicketId != expectedReceipt.TicketId {
+					errChan <- err
+				}
+			}()
+		}
+		wg.Wait()
+		close(errChan)
+
+		for err := range errChan {
+			if err != nil {
+				t.Errorf("concurrent retrieval error: %v", err)
+			}
+		}
+	})
 }
 
 // TestGetUsersBySection validates the retrieval of users by section.
