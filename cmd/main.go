@@ -5,29 +5,23 @@ import (
 	"log"
 	"time"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
+	"github.com/talk2sohail/train-ticket-api/client"
 	ticket "github.com/talk2sohail/train-ticket-api/internal/common/genproto/ticket"
 )
 
 func main() {
 
 	addr := ":9001"
-
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	trainTicketClient, err := client.NewTrainTicketClient(addr)
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Fatalf("could not connect to server: %v", err)
 	}
-
-	defer conn.Close()
-
-	client := ticket.NewTrainTicketingServiceClient(conn)
+	defer trainTicketClient.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*200)
 	defer cancel()
 
-	respone, err := client.PurchaseTicket(ctx, &ticket.PurchaseTicketRequest{
+	respone, err := trainTicketClient.PurchaseTicket(ctx, &ticket.PurchaseTicketRequest{
 		FromLocation: "New York",
 		ToLocation:   "Los Angeles",
 		User: &ticket.User{
