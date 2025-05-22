@@ -1,4 +1,4 @@
-module ticket-api
+module train-ticket-api
 
 go 1.23.5
 
