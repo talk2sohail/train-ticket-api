@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package trainticketing.entities;
+
+option go_package = "github.com/talk2sohail/train-ticket-api/proto";
+
+
+// Represents a user's personal information.
+message User {
+  string first_name = 1;
+  string last_name = 2;
+  string email = 3; // Unique identifier for the user
+}

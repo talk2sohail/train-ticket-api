@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package trainticketing.entities;
+
+option go_package = "github.com/talk2sohail/train-ticket-api/proto";
+
+
+// Represents a seat on the train.
+message Seat {
+  enum Section {
+    SECTION_UNKNOWN = 0; // Default or unassigned section
+    SECTION_A = 1;
+    SECTION_B = 2;
+  }
+  Section section = 1;
+  string seat_number = 2; // e.g., "1A", "1B", "2C"
+}

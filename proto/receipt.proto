@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package trainticketing.entities;
+
+option go_package = "github.com/talk2sohail/train-ticket-api/proto";
+
+
+import "user.proto";
+import "seat.proto";
+
+// Represents a train ticket receipt.
+message Receipt {
+  string ticket_id = 1; // Unique identifier for the ticket
+  string from_location = 2; // e.g., "London"
+  string to_location = 3;   // e.g., "France"
+  trainticketing.entities.User user = 4; // Reference to the User message
+  double price_paid = 5; // Price in USD, e.g., 20.00
+  trainticketing.entities.Seat allocated_seat = 6; // Reference to the Seat message
+}
