@@ -4,7 +4,7 @@ GO_OUT_DIR := $(WORK_DIR)/internal/common/genproto/ticket/
 PROTO_DIR := $(WORK_DIR)/proto/
 PROTO_FILES := $(PROTO_DIR)/*.proto 
 
-run: 
+run-example: 
 	@go run cmd/*.go
 
 run-ticket:

@@ -27,8 +27,8 @@ func NewTicketService() *TicketService {
 		receipts:      make(map[string]*ticket.Receipt), // Initialize the map for receipts.
 		occupiedSeats: make(map[string]*ticket.Receipt), // Initialize the map for occupied seats.
 		sectionCapacities: map[ticket.Seat_Section]int{ // Define the capacity for each section.
-			ticket.Seat_SECTION_A: 5, // Section A has 5 seats (A1 to A5).
-			ticket.Seat_SECTION_B: 5, // Section B has 5 seats (B1 to B5).
+			ticket.Seat_SECTION_A: MaxSeatsPerSection, // Section A has 5 seats (A1 to A5).
+			ticket.Seat_SECTION_B: MaxSeatsPerSection, // Section B has 5 seats (B1 to B5).
 		},
 	}
 }
@@ -40,9 +40,7 @@ func (s *TicketService) findNextAvailableSeat() (*ticket.Seat, error) {
 	// First, attempt to find an available seat in Section A.
 	for i := 1; i <= s.sectionCapacities[ticket.Seat_SECTION_A]; i++ {
 		seatNumber := fmt.Sprintf("A%d", i) // Construct seat string, e.g., "A1", "A2"
-		// Check if the seat is already occupied.
 		if _, isOccupied := s.occupiedSeats[seatNumber]; !isOccupied {
-			// If not occupied, return this seat.
 			return &ticket.Seat{
 				Section:    ticket.Seat_SECTION_A,
 				SeatNumber: seatNumber,
@@ -53,9 +51,7 @@ func (s *TicketService) findNextAvailableSeat() (*ticket.Seat, error) {
 	// If Section A is full, attempt to find an available seat in Section B.
 	for i := 1; i <= s.sectionCapacities[ticket.Seat_SECTION_B]; i++ {
 		seatNumber := fmt.Sprintf("B%d", i) // Construct seat string, e.g., "B1", "B2"
-		// Check if the seat is already occupied.
 		if _, isOccupied := s.occupiedSeats[seatNumber]; !isOccupied {
-			// If not occupied, return this seat.
 			return &ticket.Seat{
 				Section:    ticket.Seat_SECTION_B,
 				SeatNumber: seatNumber,
@@ -63,8 +59,7 @@ func (s *TicketService) findNextAvailableSeat() (*ticket.Seat, error) {
 		}
 	}
 
-	// If both sections are fully occupied, return an error.
-	return nil, fmt.Errorf("no available seats on the train")
+	return nil, fmt.Errorf("%s", ErrNoAvailableSeats)
 }
 
 // PurchaseTicket handles the purchase of a train ticket
@@ -72,17 +67,16 @@ func (s *TicketService) PurchaseTicket(ctx context.Context, req *ticket.Purchase
 
 	// Acquire a lock to protect shared server state (receipts, occupiedSeats) during concurrent access.
 	s.mu.Lock()
-	defer s.mu.Unlock() // Ensure the lock is released when the function exits.
+	defer s.mu.Unlock()
 
-	// Attempt to find the next available seat using our allocation logic.
+	// find the next available seat using our allocation logic.
 	allocatedSeat, err := s.findNextAvailableSeat()
 	if err != nil {
-		// If no seats are available, log the error and return a failed response.
-		log.Printf("Failed to purchase ticket for user %s: %v", req.GetUser().GetEmail(), err)
+		log.Printf("[PurchaseTicket] Failed for user %s: %v", req.GetUser().GetEmail(), err)
 		return ticket.PurchaseTicketResponse{
 			Success: false,
-			Message: err.Error(), // Provide the reason for failure.
-			Receipt: nil,         // No receipt generated on failure.
+			Message: err.Error(),
+			Receipt: nil,
 		}, nil
 	}
 
@@ -101,16 +95,123 @@ func (s *TicketService) PurchaseTicket(ctx context.Context, req *ticket.Purchase
 	}
 
 	// Store the new receipt in our in-memory data structures.
-	s.receipts[ticketID] = receipt                           // Store by ticket ID.
-	s.occupiedSeats[allocatedSeat.GetSeatNumber()] = receipt // Mark the seat as occupied.
+	s.receipts[ticketID] = receipt
+	s.occupiedSeats[allocatedSeat.GetSeatNumber()] = receipt
 
-	log.Printf("Ticket purchased successfully. Ticket ID: %s, Allocated Seat: %s (Section %s)",
-		ticketID, allocatedSeat.GetSeatNumber(), allocatedSeat.GetSection().String())
+	log.Printf("[PurchaseTicket] Success: TicketID=%s, Seat=%s, Section=%s", ticketID, allocatedSeat.GetSeatNumber(), allocatedSeat.GetSection().String())
 
 	// Return a successful response with the generated receipt.
 	return ticket.PurchaseTicketResponse{
 		Success: true,
 		Message: "Ticket purchased successfully!",
 		Receipt: receipt,
+	}, nil
+}
+
+// GetReceiptDetails retrieves the receipt by ticket ID.
+func (s *TicketService) GetReceiptDetails(ctx context.Context, ticketID string) (*ticket.Receipt, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	receipt, exists := s.receipts[ticketID]
+	if !exists {
+		err := fmt.Errorf("%s for ticketID %s", ErrReceiptNotFound, ticketID)
+		log.Printf("[GetReceiptDetails] %v", err)
+		return nil, err
+	}
+	log.Printf("[GetReceiptDetails] Retrieved receipt for ticketID %s", ticketID)
+	return receipt, nil
+}
+
+// GetUsersBySection retrieves all users with their seats in a specified section.
+func (s *TicketService) GetUsersBySection(ctx context.Context, section ticket.Seat_Section) (ticket.GetUsersBySectionResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var users []*ticket.UserSeat
+	// Iterate through all receipts to find users in the specified section.
+	for _, receipt := range s.receipts {
+		if receipt.AllocatedSeat.Section == section {
+			users = append(users, &ticket.UserSeat{
+				User: receipt.User,
+				Seat: receipt.AllocatedSeat,
+			})
+		}
+	}
+	log.Printf("[GetUsersBySection] Retrieved %d users in section %s", len(users), section.String())
+	return ticket.GetUsersBySectionResponse{
+		Success:        true,
+		Message:        "Users retrieved successfully",
+		UsersInSection: users,
+	}, nil
+}
+
+// RemoveUser removes a user identified by their email.
+func (s *TicketService) RemoveUser(ctx context.Context, email string) (ticket.RemoveUserResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var ticketIdToRemove string
+	for id, receipt := range s.receipts {
+		if receipt.User.GetEmail() == email {
+			ticketIdToRemove = id
+			break
+		}
+	}
+
+	if ticketIdToRemove == "" {
+		log.Printf("[RemoveUser] No user found with email: %s", email)
+		return ticket.RemoveUserResponse{
+			Success: false,
+			Message: ErrUserNotFound,
+		}, nil
+	}
+
+	receipt := s.receipts[ticketIdToRemove]
+	delete(s.receipts, ticketIdToRemove)
+	delete(s.occupiedSeats, receipt.AllocatedSeat.SeatNumber)
+	log.Printf("[RemoveUser] Removed user with email: %s, TicketID: %s", email, ticketIdToRemove)
+	return ticket.RemoveUserResponse{
+		Success: true,
+		Message: "User removed successfully",
+	}, nil
+}
+
+// ModifyUserSeat updates a user's seat given an existing receipt and the new seat.
+func (s *TicketService) ModifyUserSeat(ctx context.Context, receipt *ticket.Receipt, newSeat *ticket.Seat) (ticket.ModifyUserSeatResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Ensure the receipt exists.
+	existingUserReceipt, ok := s.receipts[receipt.TicketId]
+	if !ok {
+		log.Printf("[ModifyUserSeat] Receipt not found for TicketID: %s", receipt.TicketId)
+		return ticket.ModifyUserSeatResponse{
+			Success: false,
+			Message: ErrReceiptNotFound,
+		}, nil
+	}
+
+	// Check if new seat is occupied by another ticket.
+	if occupied, exists := s.occupiedSeats[newSeat.SeatNumber]; exists {
+		if occupied.TicketId != receipt.TicketId {
+			log.Printf("[ModifyUserSeat] Seat %s is already occupied", newSeat.SeatNumber)
+			return ticket.ModifyUserSeatResponse{
+				Success: false,
+				Message: ErrSeatOccupied,
+			}, nil
+		}
+	}
+
+	// Free the old seat.
+	delete(s.occupiedSeats, existingUserReceipt.AllocatedSeat.SeatNumber)
+	// Update receipt with the new seat.
+	existingUserReceipt.AllocatedSeat = newSeat
+	s.occupiedSeats[newSeat.SeatNumber] = existingUserReceipt
+
+	log.Printf("[ModifyUserSeat] Updated seat for TicketID: %s to Seat: %s", receipt.TicketId, newSeat.SeatNumber)
+	return ticket.ModifyUserSeatResponse{
+		Success:     true,
+		Message:     "Seat updated successfully",
+		UpdatedSeat: newSeat,
 	}, nil
 }

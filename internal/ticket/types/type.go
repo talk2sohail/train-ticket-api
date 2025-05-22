@@ -7,6 +7,9 @@ import (
 )
 
 type TicketService interface {
-	// Submits a purchase for a train ticket.
 	PurchaseTicket(context.Context, *ticket.PurchaseTicketRequest) (ticket.PurchaseTicketResponse, error)
+	GetReceiptDetails(context.Context, string) (*ticket.Receipt, error)
+	GetUsersBySection(context.Context, ticket.Seat_Section) (ticket.GetUsersBySectionResponse, error)
+	RemoveUser(context.Context, string) (ticket.RemoveUserResponse, error)
+	ModifyUserSeat(context.Context, *ticket.Receipt, *ticket.Seat) (ticket.ModifyUserSeatResponse, error)
 }
