@@ -31,6 +31,11 @@ download:
 	@go mod download
 	@echo "Go dependencies downloaded."
 
+test:
+	@echo "Running tests with coverage..."
+	@go test -timeout 30s -run ^TestUnit_*  -coverprofile coverage.out ./...
+	@echo "Coverage report generated in coverage.out."
+
 clean :
 	@echo "Cleaning up generated files..."
 	@rm -rf $(GO_OUT_DIR)/*

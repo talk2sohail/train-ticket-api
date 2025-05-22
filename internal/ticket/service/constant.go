@@ -2,7 +2,7 @@ package service
 
 const (
 	// MaxSeatsPerSection defines the maximum number of seats in each section.
-	MaxSeatsPerSection = 100
+	MaxSeatsPerSection = 5
 
 	// Define named errors
 	ErrNoAvailableSeats = "no available seats on the train"

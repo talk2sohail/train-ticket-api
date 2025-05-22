@@ -23,12 +23,12 @@ type TicketService struct {
 // NewTicketService creates a new instance of TicketService
 func NewTicketService() *TicketService {
 	return &TicketService{
-		// Initialize any necessary fields here
-		receipts:      make(map[string]*ticket.Receipt), // Initialize the map for receipts.
-		occupiedSeats: make(map[string]*ticket.Receipt), // Initialize the map for occupied seats.
-		sectionCapacities: map[ticket.Seat_Section]int{ // Define the capacity for each section.
-			ticket.Seat_SECTION_A: MaxSeatsPerSection, // Section A has 5 seats (A1 to A5).
-			ticket.Seat_SECTION_B: MaxSeatsPerSection, // Section B has 5 seats (B1 to B5).
+		// Initialize necessary fields here
+		receipts:      make(map[string]*ticket.Receipt),
+		occupiedSeats: make(map[string]*ticket.Receipt),
+		sectionCapacities: map[ticket.Seat_Section]int{
+			ticket.Seat_SECTION_A: MaxSeatsPerSection,
+			ticket.Seat_SECTION_B: MaxSeatsPerSection,
 		},
 	}
 }
