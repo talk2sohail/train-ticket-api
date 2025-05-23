@@ -47,8 +47,8 @@ func (h *TicketGrpcHandler) PurchaseTicket(ctx context.Context, req *ticket.Purc
 	return &response, nil
 }
 
-// GetReceipt handles the retrieval of receipt details for a given ticket.
-func (h *TicketGrpcHandler) GetReceipt(ctx context.Context, req *ticket.GetReceiptDetailsRequest) (*ticket.GetReceiptDetailsResponse, error) {
+// GetReceiptDetails handles the retrieval of receipt details for a given ticket.
+func (h *TicketGrpcHandler) GetReceiptDetails(ctx context.Context, req *ticket.GetReceiptDetailsRequest) (*ticket.GetReceiptDetailsResponse, error) {
 	// Optionally, validate request here if needed.
 	receipt, err := h.ticketService.GetReceiptDetails(ctx, req.GetTicketId())
 	if err != nil {

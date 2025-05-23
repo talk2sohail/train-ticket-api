@@ -38,4 +38,55 @@ func main() {
 
 	log.Printf("Ticket purchased successfully: %s", respone.GetReceipt().GetTicketId())
 	log.Printf("Allocated Seat: %s (Section %s)", respone.GetReceipt().GetAllocatedSeat().SeatNumber, respone.GetReceipt().GetAllocatedSeat().GetSection().String())
+
+	// Get receipt details
+	receiptDetails, err := trainTicketClient.GetReceiptDetails(ctx, respone.GetReceipt().GetTicketId())
+	if err != nil {
+		log.Fatalf("could not get receipt details: %v", err)
+	}
+	// Print receipt details
+	log.Printf("Receipt ID: %s", receiptDetails.GetReceipt().GetTicketId())
+	log.Printf("From: %s", receiptDetails.GetReceipt().GetFromLocation())
+	log.Printf("To: %s", receiptDetails.GetReceipt().GetToLocation())
+	log.Printf("User: %s %s (%s)", receiptDetails.GetReceipt().GetUser().GetFirstName(), receiptDetails.GetReceipt().GetUser().GetLastName(), receiptDetails.GetReceipt().GetUser().GetEmail())
+	log.Printf("Price Paid: %.2f", receiptDetails.GetReceipt().GetPricePaid())
+	log.Printf("Purchase Time: %s", receiptDetails.GetReceipt().GetPurchaseDate().AsTime().Format(time.RFC3339))
+	log.Printf("Seat Number: %s", receiptDetails.GetReceipt().GetAllocatedSeat().GetSeatNumber())
+	log.Printf("Seat Section: %s", receiptDetails.GetReceipt().GetAllocatedSeat().GetSection().String())
+
+	// Get users by section
+	usersBySection, err := trainTicketClient.GetUsersBySection(ctx, ticket.Seat_SECTION_A)
+	if err != nil {
+		log.Fatalf("could not get users by section: %v", err)
+	}
+	log.Printf("Users in Section A: %v", usersBySection.GetUsersInSection())
+
+	// Get users by section
+	usersBySection, err = trainTicketClient.GetUsersBySection(ctx, ticket.Seat_SECTION_B)
+	if err != nil {
+		log.Fatalf("could not get users by section: %v", err)
+	}
+	log.Printf("Users in Section B: %v", usersBySection.GetUsersInSection())
+
+	// Modify user seat
+	newSeat := &ticket.Seat{
+		SeatNumber: "B2",
+		Section:    ticket.Seat_SECTION_A,
+	}
+	modifiedSeat, err := trainTicketClient.ModifyUserSeat(ctx, receiptDetails.GetReceipt().GetTicketId(), newSeat)
+	if err != nil {
+		log.Fatalf("could not modify user seat: %v", err)
+	}
+	log.Printf("User seat modified successfully: %s", modifiedSeat.GetMessage())
+	log.Printf("New Seat Number: %s", modifiedSeat.GetUpdatedSeat().GetSeatNumber())
+
+	// Remove user
+	email := receiptDetails.GetReceipt().GetUser().GetEmail()
+	removedUser, err := trainTicketClient.RemoveUser(ctx, email)
+	if err != nil {
+		log.Fatalf("could not remove user: %v", err)
+	}
+
+	log.Printf("User removed successfully: %s", removedUser.GetMessage())
+
 }

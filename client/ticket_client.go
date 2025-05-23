@@ -20,6 +20,8 @@ import (
 // when the client is no longer needed to avoid resource leaks.
 // The client methods log errors and return them to the caller.
 // This allows the caller to handle errors appropriately.
+
+// NOTE: The client is currently tighly coupled with grpc code. Need to refactor it to be more generic and decoupled from grpc.
 type TicketClient struct {
 	conn   *grpc.ClientConn
 	client ticket.TrainTicketingServiceClient
