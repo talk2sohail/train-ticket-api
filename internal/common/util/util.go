@@ -29,8 +29,27 @@ func ValidatePurchseRequestObject(r *ticket.PurchaseTicketRequest) error {
 
 func ValidateSection(r *ticket.GetUsersBySectionRequest) error {
 	if r.GetSection().String() == "" {
-		log.Printf("Section is required")
 		return fmt.Errorf("Section is required")
+	}
+
+	if r.GetSection() == ticket.Seat_SECTION_UNKNOWN {
+		return fmt.Errorf("Section is invalid")
+	}
+	return nil
+}
+
+func ValidateModifyUserSeatRequestObject(req *ticket.ModifyUserSeatRequest) error {
+	if req == nil {
+		log.Printf("Invalid ModifyUserSeat request: request is nil")
+		return fmt.Errorf("request cannot be nil")
+	}
+	if req.GetTicketId() == "" {
+		log.Printf("Invalid ModifyUserSeat request: ticketId is required")
+		return fmt.Errorf("ticketId is required")
+	}
+	if req.GetNewSeat() == nil {
+		log.Printf("Invalid ModifyUserSeat request: new seat is required")
+		return fmt.Errorf("new seat is required")
 	}
 	return nil
 }

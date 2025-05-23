@@ -39,4 +39,9 @@ test:
 clean :
 	@echo "Cleaning up generated files..."
 	@rm -rf $(GO_OUT_DIR)/*
+	@rm -rf $(WORK_DIR)/mock/*
 	@echo "Clean up completed."
+
+mocks:
+	@echo "Generating mocks for TicketService..."
+	@mockgen -destination=./mock/ticket_service_mock.go -package=mock github.com/talk2sohail/train-ticket-api/internal/ticket/types TicketService

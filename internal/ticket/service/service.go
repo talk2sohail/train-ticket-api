@@ -103,7 +103,7 @@ func (s *TicketService) PurchaseTicket(ctx context.Context, req *ticket.Purchase
 	// Return a successful response with the generated receipt.
 	return ticket.PurchaseTicketResponse{
 		Success: true,
-		Message: "Ticket purchased successfully!",
+		Message: MsgTicketPurchaseSuccess,
 		Receipt: receipt,
 	}, nil
 }
@@ -140,7 +140,7 @@ func (s *TicketService) GetUsersBySection(ctx context.Context, section ticket.Se
 	log.Printf("[GetUsersBySection] Retrieved %d users in section %s", len(users), section.String())
 	return ticket.GetUsersBySectionResponse{
 		Success:        true,
-		Message:        "Users retrieved successfully",
+		Message:        MsgUsersRetrieved,
 		UsersInSection: users,
 	}, nil
 }
@@ -172,7 +172,7 @@ func (s *TicketService) RemoveUser(ctx context.Context, email string) (ticket.Re
 	log.Printf("[RemoveUser] Removed user with email: %s, TicketID: %s", email, ticketIdToRemove)
 	return ticket.RemoveUserResponse{
 		Success: true,
-		Message: "User removed successfully",
+		Message: MsgUserRemovedSuccess,
 	}, nil
 }
 
@@ -211,7 +211,7 @@ func (s *TicketService) ModifyUserSeat(ctx context.Context, receipt *ticket.Rece
 	log.Printf("[ModifyUserSeat] Updated seat for TicketID: %s to Seat: %s", receipt.TicketId, newSeat.SeatNumber)
 	return ticket.ModifyUserSeatResponse{
 		Success:     true,
-		Message:     "Seat updated successfully",
+		Message:     MsgSeatUpdatedSuccess,
 		UpdatedSeat: newSeat,
 	}, nil
 }

@@ -16,10 +16,14 @@ type TicketGrpcHandler struct {
 	ticket.UnimplementedTrainTicketingServiceServer
 }
 
-func RegisterTicketServiceServer(grpc *grpc.Server, ticketService types.TicketService) {
-	gRPCHandler := &TicketGrpcHandler{
+func NewTicketGrpcHandler(ticketService types.TicketService) *TicketGrpcHandler {
+	return &TicketGrpcHandler{
 		ticketService: ticketService,
 	}
+}
+
+func RegisterTicketServiceServer(grpc *grpc.Server, ticketService types.TicketService) {
+	gRPCHandler := NewTicketGrpcHandler(ticketService)
 
 	// register the ticket service server
 	ticket.RegisterTrainTicketingServiceServer(grpc, gRPCHandler)
@@ -49,6 +53,12 @@ func (h *TicketGrpcHandler) PurchaseTicket(ctx context.Context, req *ticket.Purc
 
 // GetReceiptDetails handles the retrieval of receipt details for a given ticket.
 func (h *TicketGrpcHandler) GetReceiptDetails(ctx context.Context, req *ticket.GetReceiptDetailsRequest) (*ticket.GetReceiptDetailsResponse, error) {
+
+	// Validate the ticketId.
+	if req.GetTicketId() == "" {
+		return nil, errors.New("ticketId is required")
+	}
+
 	// Optionally, validate request here if needed.
 	receipt, err := h.ticketService.GetReceiptDetails(ctx, req.GetTicketId())
 	if err != nil {
@@ -93,25 +103,23 @@ func (h *TicketGrpcHandler) RemoveUser(ctx context.Context, req *ticket.RemoveUs
 
 // ModifyUserSeat handles updating a user's seat allocation.
 func (h *TicketGrpcHandler) ModifyUserSeat(ctx context.Context, req *ticket.ModifyUserSeatRequest) (*ticket.ModifyUserSeatResponse, error) {
-	// Validate identifier: ensure ticketId is provided.
-	ticketID := req.GetTicketId()
-	if ticketID == "" {
-		return nil, errors.New("ticketId is required")
-	}
-	// Retrieve existing receipt.
-	receipt, err := h.ticketService.GetReceiptDetails(ctx, ticketID)
+
+	// Validate the request object.
+	err := util.ValidateModifyUserSeatRequestObject(req)
 	if err != nil {
-		log.Printf("Error retrieving receipt for ticketID %s: %v", ticketID, err)
+		log.Printf("Invalid ModifyUserSeat request: %v", err)
 		return nil, err
 	}
-	// Ensure new seat is provided.
-	newSeat := req.GetNewSeat()
-	if newSeat == nil {
-		return nil, errors.New("new seat is required")
+
+	// Retrieve existing receipt.
+	receipt, err := h.ticketService.GetReceiptDetails(ctx, req.GetTicketId())
+	if err != nil {
+		log.Printf("Error retrieving receipt for ticketID %s: %v", req.GetTicketId(), err)
+		return nil, err
 	}
 
 	// Call the service method with the receipt and new seat.
-	resp, err := h.ticketService.ModifyUserSeat(ctx, receipt, newSeat)
+	resp, err := h.ticketService.ModifyUserSeat(ctx, receipt, req.GetNewSeat())
 	if err != nil {
 		log.Printf("Error in ModifyUserSeat: %v", err)
 		return nil, err
