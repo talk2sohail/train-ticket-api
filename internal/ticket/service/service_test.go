@@ -9,13 +9,10 @@ import (
 	ticket "github.com/talk2sohail/train-ticket-api/internal/common/genproto/ticket"
 )
 
-// TestUnit_FindNextAvailableSeat validates the seat allocation logic.
 func TestUnit_FindNextAvailableSeat(t *testing.T) {
-	// Create a fresh instance.
 	s := NewTicketService()
 
 	t.Run("Section A available", func(t *testing.T) {
-		// With no seats occupied, expect seat A1.
 		seat, err := s.findNextAvailableSeat()
 		if err != nil {
 			t.Fatalf("expected seat, got error: %v", err)
@@ -26,7 +23,6 @@ func TestUnit_FindNextAvailableSeat(t *testing.T) {
 	})
 
 	t.Run("Section A full, Section B available", func(t *testing.T) {
-		// Fill Section A.
 		for i := 1; i <= s.sectionCapacities[ticket.Seat_SECTION_A]; i++ {
 			seatNum := fmt.Sprintf("A%d", i)
 			s.occupiedSeats[seatNum] = &ticket.Receipt{}
@@ -41,7 +37,6 @@ func TestUnit_FindNextAvailableSeat(t *testing.T) {
 	})
 
 	t.Run("No available seats", func(t *testing.T) {
-		// Fill Section B as well.
 		for i := 1; i <= s.sectionCapacities[ticket.Seat_SECTION_B]; i++ {
 			seatNum := fmt.Sprintf("B%d", i)
 			s.occupiedSeats[seatNum] = &ticket.Receipt{}
@@ -56,7 +51,6 @@ func TestUnit_FindNextAvailableSeat(t *testing.T) {
 	})
 }
 
-// TestUnit_PurchaseTicket validates the ticket purchase logic.
 func TestUnit_PurchaseTicket(t *testing.T) {
 	ctx := context.Background()
 
@@ -82,7 +76,6 @@ func TestUnit_PurchaseTicket(t *testing.T) {
 		if res.Receipt == nil {
 			t.Fatalf("expected a receipt, got nil")
 		}
-		// Expect the first available seat ("A1")
 		if res.Receipt.AllocatedSeat.SeatNumber != "A1" {
 			t.Errorf("expected allocated seat 'A1', got: %s", res.Receipt.AllocatedSeat.SeatNumber)
 		}
@@ -90,7 +83,6 @@ func TestUnit_PurchaseTicket(t *testing.T) {
 
 	t.Run("Purchase fails when no seats available", func(t *testing.T) {
 		s := NewTicketService()
-		// Manually occupy all seats in both sections.
 		for _, section := range []ticket.Seat_Section{ticket.Seat_SECTION_A, ticket.Seat_SECTION_B} {
 			for i := 1; i <= s.sectionCapacities[section]; i++ {
 				seatID := ""
@@ -114,7 +106,6 @@ func TestUnit_PurchaseTicket(t *testing.T) {
 			PricePaid: 50.0,
 		}
 		res, err := s.PurchaseTicket(ctx, req)
-		// PurchaseTicket returns a successful error value even on failure.
 		if err != nil {
 			t.Fatalf("expected no error returned, got: %v", err)
 		}
@@ -158,12 +149,10 @@ func TestUnit_PurchaseTicket(t *testing.T) {
 	})
 }
 
-// TestPurchaseTicketConcurrent validates concurrent ticket purchases.
 func TestUnit_PurchaseTicketConcurrent(t *testing.T) {
 	ctx := context.Background()
 	s := NewTicketService()
 
-	// Total available seats in our service across sections.
 	totalSeats := s.sectionCapacities[ticket.Seat_SECTION_A] + s.sectionCapacities[ticket.Seat_SECTION_B]
 
 	type result struct {
@@ -172,7 +161,6 @@ func TestUnit_PurchaseTicketConcurrent(t *testing.T) {
 	}
 	var wg sync.WaitGroup
 
-	// Launch concurrent goroutines.
 	numAttempts := totalSeats + 2
 	emailPrefix := "user_%d@example.com"
 	var resChan = make(chan result, numAttempts)
@@ -190,7 +178,6 @@ func TestUnit_PurchaseTicketConcurrent(t *testing.T) {
 				},
 				PricePaid: 25.0,
 			}
-			// Call PurchaseTicket
 			res, err := s.PurchaseTicket(ctx, req)
 			resChan <- result{response: res, err: err}
 		}(i)
@@ -198,7 +185,6 @@ func TestUnit_PurchaseTicketConcurrent(t *testing.T) {
 	wg.Wait()
 	close(resChan)
 
-	// Collect responses and assert results.
 	successMap := make(map[string]bool)
 	var successCount int
 	for res := range resChan {
@@ -209,39 +195,33 @@ func TestUnit_PurchaseTicketConcurrent(t *testing.T) {
 		if res.response.Success {
 			successCount++
 			seat := res.response.Receipt.AllocatedSeat.SeatNumber
-			// Check that seat allocation is unique.
 			if successMap[seat] {
 				t.Errorf("Duplicate allocation for seat %s", seat)
 			}
 			successMap[seat] = true
 		} else {
-			// On failure, the message should be ErrNoAvailableSeats.
 			if res.response.Message != ErrNoAvailableSeats {
 				t.Errorf("Expected error message %q, got %q", ErrNoAvailableSeats, res.response.Message)
 			}
 		}
 	}
 
-	// Assert that the total number of successful purchases equals total available seats.
 	if successCount != totalSeats {
 		t.Errorf("Expected %d successful purchases, got %d", totalSeats, successCount)
 	}
 }
 
-// TestGetReceiptDetails validates the receipt retrieval logic.
 func TestUnit_GetReceiptDetails(t *testing.T) {
 	ctx := context.Background()
 	s := NewTicketService()
 
 	t.Run("Receipt exists", func(t *testing.T) {
-		// Arrange: manually insert a receipt.
 		ticketID := "test-ticket-1"
 		expectedReceipt := &ticket.Receipt{
 			TicketId:     ticketID,
 			FromLocation: "CityA",
 			ToLocation:   "CityB",
 			PricePaid:    100.0,
-			// ...other fields as necessary...
 		}
 		s.receipts[ticketID] = expectedReceipt
 
@@ -283,18 +263,15 @@ func TestUnit_GetReceiptDetails(t *testing.T) {
 	})
 
 	t.Run("Concurrent retrieval of a receipt", func(t *testing.T) {
-		// Setup: Insert a receipt into the service.
 		ticketID := "concurrent-ticket"
 		expectedReceipt := &ticket.Receipt{
 			TicketId:     ticketID,
 			FromLocation: "CityX",
 			ToLocation:   "CityY",
 			PricePaid:    75.0,
-			// ...other necessary fields...
 		}
 		s.receipts[ticketID] = expectedReceipt
 
-		// Launch multiple goroutines concurrently calling GetReceiptDetails.
 		numGoroutines := 20
 		var wg sync.WaitGroup
 		errChan := make(chan error, numGoroutines)
@@ -324,7 +301,6 @@ func TestUnit_GetReceiptDetails(t *testing.T) {
 	})
 }
 
-// TestGetUsersBySection validates the retrieval of users by section.
 func TestUnit_GetUsersBySection(t *testing.T) {
 	ctx := context.Background()
 	s := NewTicketService()
@@ -340,7 +316,6 @@ func TestUnit_GetUsersBySection(t *testing.T) {
 	})
 
 	t.Run("Returns users in specified section", func(t *testing.T) {
-		// Add receipts manually into the service.
 		r1 := &ticket.Receipt{
 			TicketId: "ticket1",
 			AllocatedSeat: &ticket.Seat{
@@ -357,7 +332,6 @@ func TestUnit_GetUsersBySection(t *testing.T) {
 			},
 			User: &ticket.User{Email: "user2@example.com"},
 		}
-		// A receipt in a different section.
 		r3 := &ticket.Receipt{
 			TicketId: "ticket3",
 			AllocatedSeat: &ticket.Seat{
@@ -382,7 +356,6 @@ func TestUnit_GetUsersBySection(t *testing.T) {
 		if len(resp.UsersInSection) != 2 {
 			t.Errorf("expected 2 users in Section A, got %d", len(resp.UsersInSection))
 		}
-		// Optionally, verify returned emails.
 		emails := map[string]bool{
 			"user1@example.com": false,
 			"user2@example.com": false,
@@ -400,13 +373,11 @@ func TestUnit_GetUsersBySection(t *testing.T) {
 	})
 }
 
-// TestRemoveUser validates the removal of a user.
 func TestUnit_RemoveUser(t *testing.T) {
 	ctx := context.Background()
 	s := NewTicketService()
 
 	t.Run("Removes existing user", func(t *testing.T) {
-		// Arrange: manually insert a receipt for a user
 		receipt := &ticket.Receipt{
 			TicketId: "ticket1",
 			User: &ticket.User{
@@ -431,7 +402,6 @@ func TestUnit_RemoveUser(t *testing.T) {
 			t.Errorf("expected removal success, got failure with message: %s", resp.Message)
 		}
 
-		// Ensure that the receipt and seat are removed.
 		if _, exists := s.receipts["ticket1"]; exists {
 			t.Errorf("expected receipt to be removed")
 		}
@@ -456,13 +426,11 @@ func TestUnit_RemoveUser(t *testing.T) {
 	})
 }
 
-// TestModifyUserSeat validates the modification of a user's seat.
 func TestUnit_ModifyUserSeat(t *testing.T) {
 	ctx := context.Background()
 	s := NewTicketService()
 
 	t.Run("Successful seat modification", func(t *testing.T) {
-		// Setup: Insert a receipt with seat A1.
 		receipt := &ticket.Receipt{
 			TicketId: "ticket1",
 			User: &ticket.User{
@@ -476,7 +444,6 @@ func TestUnit_ModifyUserSeat(t *testing.T) {
 		s.receipts[receipt.TicketId] = receipt
 		s.occupiedSeats["A1"] = receipt
 
-		// Modify seat from A1 to A2.
 		newSeat := &ticket.Seat{
 			Section:    ticket.Seat_SECTION_A,
 			SeatNumber: "A2",
@@ -491,14 +458,12 @@ func TestUnit_ModifyUserSeat(t *testing.T) {
 		if receipt.AllocatedSeat.SeatNumber != "A2" {
 			t.Errorf("expected seat to be updated to A2, got %s", receipt.AllocatedSeat.SeatNumber)
 		}
-		// Verify old seat A1 is freed.
 		if _, exists := s.occupiedSeats["A1"]; exists {
 			t.Errorf("expected seat A1 to be freed")
 		}
 	})
 
 	t.Run("Fail modification due to seat already occupied", func(t *testing.T) {
-		// Setup: Create two receipts for different tickets.
 		receipt1 := &ticket.Receipt{
 			TicketId: "ticket2",
 			User: &ticket.User{
@@ -525,7 +490,6 @@ func TestUnit_ModifyUserSeat(t *testing.T) {
 		s.receipts[receipt2.TicketId] = receipt2
 		s.occupiedSeats["B2"] = receipt2
 
-		// Attempt to modify receipt1's seat to B2 (which is already occupied).
 		newSeat := &ticket.Seat{
 			Section:    ticket.Seat_SECTION_B,
 			SeatNumber: "B2",
@@ -543,7 +507,6 @@ func TestUnit_ModifyUserSeat(t *testing.T) {
 	})
 
 	t.Run("Fail modification due to non-existent receipt", func(t *testing.T) {
-		// Setup: Create a receipt that has not been added to s.receipts.
 		receipt := &ticket.Receipt{
 			TicketId: "nonexistent_ticket",
 			User: &ticket.User{
@@ -571,7 +534,6 @@ func TestUnit_ModifyUserSeat(t *testing.T) {
 	})
 
 	t.Run("Modify seat to same seat returns success", func(t *testing.T) {
-		// Setup: Insert a receipt with seat A1.
 		receipt := &ticket.Receipt{
 			TicketId: "ticket_same",
 			User: &ticket.User{
@@ -585,7 +547,6 @@ func TestUnit_ModifyUserSeat(t *testing.T) {
 		s.receipts[receipt.TicketId] = receipt
 		s.occupiedSeats["A1"] = receipt
 
-		// Try to modify to the same seat.
 		sameSeat := &ticket.Seat{
 			Section:    ticket.Seat_SECTION_A,
 			SeatNumber: "A1",

@@ -104,5 +104,5 @@ message ModifyUserSeatRequest {
 message ModifyUserSeatResponse {
   bool success = 1;
   string message = 2;
-  trainticketing.entities.Seat updated_seat = 3; // The newly allocated seat if successful
+  trainticketing.entities.Receipt updated_receipt = 3; // The newly allocated seat if successful
 }

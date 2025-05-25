@@ -210,8 +210,8 @@ func (s *TicketService) ModifyUserSeat(ctx context.Context, receipt *ticket.Rece
 
 	log.Printf("[ModifyUserSeat] Updated seat for TicketID: %s to Seat: %s", receipt.TicketId, newSeat.SeatNumber)
 	return ticket.ModifyUserSeatResponse{
-		Success:     true,
-		Message:     MsgSeatUpdatedSuccess,
-		UpdatedSeat: newSeat,
+		Success:        true,
+		Message:        MsgSeatUpdatedSuccess,
+		UpdatedReceipt: existingUserReceipt,
 	}, nil
 }

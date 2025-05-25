@@ -18,7 +18,6 @@ func TestUnit_HandlerPurchaseTicket(t *testing.T) {
 
 	ctx := context.Background()
 
-	// valid request for testing
 	validReq := &ticket.PurchaseTicketRequest{
 		FromLocation: "Station A",
 		ToLocation:   "Station B",
@@ -31,7 +30,6 @@ func TestUnit_HandlerPurchaseTicket(t *testing.T) {
 	}
 
 	t.Run("invalid request", func(t *testing.T) {
-		// Pass an empty request to trigger validation failure.
 		emptyReq := &ticket.PurchaseTicketRequest{}
 		mockSvc := mock.NewMockTicketService(ctrl)
 		h := handler.NewTicketGrpcHandler(mockSvc)
@@ -44,7 +42,6 @@ func TestUnit_HandlerPurchaseTicket(t *testing.T) {
 	t.Run("service error", func(t *testing.T) {
 		expectedErr := errors.New("service failure")
 		mockSvc := mock.NewMockTicketService(ctrl)
-		// Expect PurchaseTicket call with validReq to return an error.
 		mockSvc.EXPECT().PurchaseTicket(ctx, validReq).Return(ticket.PurchaseTicketResponse{}, expectedErr)
 
 		h := handler.NewTicketGrpcHandler(mockSvc)
@@ -58,7 +55,6 @@ func TestUnit_HandlerPurchaseTicket(t *testing.T) {
 	})
 
 	t.Run("successful purchase", func(t *testing.T) {
-		// For a meaningful test, assume the response includes a TicketId field.
 		expectedResp := ticket.PurchaseTicketResponse{
 			Message: service.MsgTicketPurchaseSuccess,
 			Success: true,
@@ -67,7 +63,6 @@ func TestUnit_HandlerPurchaseTicket(t *testing.T) {
 			},
 		}
 		mockSvc := mock.NewMockTicketService(ctrl)
-		// Expect a successful PurchaseTicket call returning expectedResp.
 		mockSvc.EXPECT().PurchaseTicket(ctx, validReq).Return(expectedResp, nil)
 
 		h := handler.NewTicketGrpcHandler(mockSvc)
@@ -144,9 +139,8 @@ func TestUnit_HandlerGetUsersBySection(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("invalid section", func(t *testing.T) {
-		// An empty section should fail validation.
 		req := &ticket.GetUsersBySectionRequest{
-			Section: ticket.Seat_SECTION_UNKNOWN, // invalid section
+			Section: ticket.Seat_SECTION_UNKNOWN,
 		}
 		mockSvc := mock.NewMockTicketService(ctrl)
 		h := handler.NewTicketGrpcHandler(mockSvc)
@@ -158,11 +152,10 @@ func TestUnit_HandlerGetUsersBySection(t *testing.T) {
 
 	t.Run("service error", func(t *testing.T) {
 		req := &ticket.GetUsersBySectionRequest{
-			Section: ticket.Seat_SECTION_A, // valid section
+			Section: ticket.Seat_SECTION_A,
 		}
 		expectedErr := errors.New("service failure")
 		mockSvc := mock.NewMockTicketService(ctrl)
-		// Expect service call to return an error.
 		mockSvc.EXPECT().
 			GetUsersBySection(ctx, ticket.Seat_SECTION_A).
 			Return(ticket.GetUsersBySectionResponse{}, expectedErr)
@@ -180,9 +173,7 @@ func TestUnit_HandlerGetUsersBySection(t *testing.T) {
 		req := &ticket.GetUsersBySectionRequest{
 			Section: ticket.Seat_SECTION_A,
 		}
-		expectedResp := ticket.GetUsersBySectionResponse{
-			// ...assign expected fields if applicable...
-		}
+		expectedResp := ticket.GetUsersBySectionResponse{}
 		mockSvc := mock.NewMockTicketService(ctrl)
 		mockSvc.EXPECT().
 			GetUsersBySection(ctx, ticket.Seat_SECTION_A).
@@ -238,9 +229,7 @@ func TestUnit_HandlerRemoveUser(t *testing.T) {
 		req := &ticket.RemoveUserRequest{
 			Identifier: &ticket.RemoveUserRequest_Email{Email: "user@example.com"},
 		}
-		expectedResp := ticket.RemoveUserResponse{
-			// ...set expected response fields...
-		}
+		expectedResp := ticket.RemoveUserResponse{}
 		mockSvc := mock.NewMockTicketService(ctrl)
 		mockSvc.EXPECT().
 			RemoveUser(ctx, "user@example.com").
@@ -294,7 +283,6 @@ func TestUnit_HandlerModifyUserSeat(t *testing.T) {
 		}
 		expectedErr := errors.New("failed to retrieve receipt")
 		mockSvc := mock.NewMockTicketService(ctrl)
-		// Simulate error during receipt retrieval.
 		mockSvc.EXPECT().
 			GetReceiptDetails(ctx, "ticket-123").
 			Return(nil, expectedErr)
@@ -313,11 +301,9 @@ func TestUnit_HandlerModifyUserSeat(t *testing.T) {
 		expectedReceipt := &ticket.Receipt{TicketId: "ticket-123"}
 		expectedErr := errors.New("seat modification failed")
 		mockSvc := mock.NewMockTicketService(ctrl)
-		// First, receipt is retrieved successfully.
 		mockSvc.EXPECT().
 			GetReceiptDetails(ctx, "ticket-123").
 			Return(expectedReceipt, nil)
-		// Then, seat modification fails.
 		mockSvc.EXPECT().
 			ModifyUserSeat(ctx, expectedReceipt, req.GetNewSeat()).
 			Return(ticket.ModifyUserSeatResponse{}, expectedErr)
@@ -336,14 +322,11 @@ func TestUnit_HandlerModifyUserSeat(t *testing.T) {
 		expectedReceipt := &ticket.Receipt{TicketId: "ticket-123"}
 		expectedResp := ticket.ModifyUserSeatResponse{
 			Message: "seat updated successfully",
-			// ...set additional expected fields if needed...
 		}
 		mockSvc := mock.NewMockTicketService(ctrl)
-		// Expect a successful receipt retrieval.
 		mockSvc.EXPECT().
 			GetReceiptDetails(ctx, "ticket-123").
 			Return(expectedReceipt, nil)
-		// Then, expect successful seat modification.
 		mockSvc.EXPECT().
 			ModifyUserSeat(ctx, expectedReceipt, req.GetNewSeat()).
 			Return(expectedResp, nil)

@@ -683,12 +683,12 @@ func (*ModifyUserSeatRequest_TicketId) isModifyUserSeatRequest_Identifier() {}
 
 // Response message for modifying a user's seat.
 type ModifyUserSeatResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	UpdatedSeat   *Seat                  `protobuf:"bytes,3,opt,name=updated_seat,json=updatedSeat,proto3" json:"updated_seat,omitempty"` // The newly allocated seat if successful
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Success        bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Message        string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	UpdatedReceipt *Receipt               `protobuf:"bytes,3,opt,name=updated_receipt,json=updatedReceipt,proto3" json:"updated_receipt,omitempty"` // The newly allocated seat if successful
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ModifyUserSeatResponse) Reset() {
@@ -735,9 +735,9 @@ func (x *ModifyUserSeatResponse) GetMessage() string {
 	return ""
 }
 
-func (x *ModifyUserSeatResponse) GetUpdatedSeat() *Seat {
+func (x *ModifyUserSeatResponse) GetUpdatedReceipt() *Receipt {
 	if x != nil {
-		return x.UpdatedSeat
+		return x.UpdatedReceipt
 	}
 	return nil
 }
@@ -791,11 +791,11 @@ const file_ticket_proto_rawDesc = "" +
 	"\tticket_id\x18\x02 \x01(\tH\x00R\bticketId\x128\n" +
 	"\bnew_seat\x18\x03 \x01(\v2\x1d.trainticketing.entities.SeatR\anewSeatB\f\n" +
 	"\n" +
-	"identifier\"\x8e\x01\n" +
+	"identifier\"\x97\x01\n" +
 	"\x16ModifyUserSeatResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\x12@\n" +
-	"\fupdated_seat\x18\x03 \x01(\v2\x1d.trainticketing.entities.SeatR\vupdatedSeat2\xd2\x04\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12I\n" +
+	"\x0fupdated_receipt\x18\x03 \x01(\v2 .trainticketing.entities.ReceiptR\x0eupdatedReceipt2\xd2\x04\n" +
 	"\x15TrainTicketingService\x12o\n" +
 	"\x0ePurchaseTicket\x12-.trainticketing.service.PurchaseTicketRequest\x1a..trainticketing.service.PurchaseTicketResponse\x12x\n" +
 	"\x11GetReceiptDetails\x120.trainticketing.service.GetReceiptDetailsRequest\x1a1.trainticketing.service.GetReceiptDetailsResponse\x12x\n" +
@@ -843,7 +843,7 @@ var file_ticket_proto_depIdxs = []int32{
 	14, // 5: trainticketing.service.GetUsersBySectionRequest.section:type_name -> trainticketing.entities.Seat.Section
 	4,  // 6: trainticketing.service.GetUsersBySectionResponse.users_in_section:type_name -> trainticketing.service.UserSeat
 	13, // 7: trainticketing.service.ModifyUserSeatRequest.new_seat:type_name -> trainticketing.entities.Seat
-	13, // 8: trainticketing.service.ModifyUserSeatResponse.updated_seat:type_name -> trainticketing.entities.Seat
+	12, // 8: trainticketing.service.ModifyUserSeatResponse.updated_receipt:type_name -> trainticketing.entities.Receipt
 	0,  // 9: trainticketing.service.TrainTicketingService.PurchaseTicket:input_type -> trainticketing.service.PurchaseTicketRequest
 	2,  // 10: trainticketing.service.TrainTicketingService.GetReceiptDetails:input_type -> trainticketing.service.GetReceiptDetailsRequest
 	5,  // 11: trainticketing.service.TrainTicketingService.GetUsersBySection:input_type -> trainticketing.service.GetUsersBySectionRequest
